@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>AI Chat Mobile (n8n Table Fixed)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f9fafb;
+        overscroll-behavior-y: contain;
+      }
+
+      .chat-container {
+        height: calc(100vh - 130px);
+      }
+
+      .message-bubble {
+        max-width: 90%;
+        word-wrap: break-word;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #e5e7eb;
+        border-radius: 10px;
+      }
+
+      .typing-indicator span {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        background-color: #9ca3af;
+        border-radius: 50%;
+        margin-right: 2px;
+        animation: bounce 1.4s infinite ease-in-out both;
+      }
+
+      .typing-indicator span:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+      .typing-indicator span:nth-child(2) {
+        animation-delay: -0.16s;
+      }
+
+      @keyframes bounce {
+        0%,
+        80%,
+        100% {
+          transform: scale(0);
+        }
+        40% {
+          transform: scale(1);
+        }
+      }
+
+      .ios-shadow {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+      }
+
+      /* Table Styles within message bubble */
+      .ai-table-container {
+        width: 100%;
+        overflow-x: auto;
+        margin-top: 8px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: white;
+      }
+      .ai-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+      }
+      .ai-table th {
+        background-color: #f9fafb;
+        color: #6b7280;
+        font-weight: 600;
+        text-align: left;
+        padding: 10px 12px;
+        border-bottom: 1px solid #e5e7eb;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        white-space: nowrap;
+      }
+      .ai-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f3f4f6;
+        color: #374151;
+        white-space: nowrap;
+      }
+      .ai-table tr:last-child td {
+        border-bottom: none;
+      }
+      .ai-table .total-row {
+        background-color: #fefce8;
+        font-weight: 700;
+        color: #1e1b4b;
+      }
+    </style>
+  </head>
+  <body
+    class="flex flex-col h-screen max-w-md mx-auto bg-white border-x border-gray-100"
+  >
+    <!-- Header -->
+    <header
+      class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-md"
+        >
+          <i class="fas fa-receipt text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-gray-800 leading-none">
+            Quản lý Chi tiêu
+          </h1>
+          <span
+            class="text-xs text-green-500 font-medium flex items-center gap-1 mt-1"
+          >
+            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> n8n
+            Connected
+          </span>
+        </div>
+      </div>
+      <button
+        id="clearChat"
+        class="p-2 text-gray-400 hover:text-red-500 transition-colors"
+      >
+        <i class="fas fa-trash-alt"></i>
+      </button>
+    </header>
+
+    <!-- Chat Space -->
+    <main
+      id="chatDisplay"
+      class="chat-container flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+    >
+      <!-- Welcome Message -->
+      <div class="flex items-start gap-2">
+        <div
+          class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0"
+        >
+          <i class="fas fa-robot text-indigo-600 text-xs"></i>
+        </div>
+        <div
+          class="message-bubble bg-white p-3 rounded-2xl rounded-tl-none ios-shadow text-gray-700 text-sm leading-relaxed"
+        >
+          Xin chào! Tôi đã sẵn sàng hiển thị danh sách chi tiêu của bạn dưới
+          dạng bảng.
+        </div>
+      </div>
+    </main>
+
+    <!-- Loading Indicator (Hidden) -->
+    <div id="loading" class="hidden px-4 py-2">
+      <div class="flex items-start gap-2 opacity-70">
+        <div
+          class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0"
+        >
+          <i class="fas fa-robot text-indigo-600 text-xs"></i>
+        </div>
+        <div
+          class="message-bubble bg-white p-3 rounded-2xl rounded-tl-none ios-shadow"
+        >
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <footer class="p-3 bg-white border-t border-gray-100 pb-safe">
+      <form id="chatForm" class="flex items-center gap-2">
+        <div class="relative flex-1">
+          <input
+            type="text"
+            id="userInput"
+            placeholder="Nhập nội dung chi tiêu..."
+            class="w-full pl-4 pr-10 py-3 bg-gray-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
+            autocomplete="off"
+          />
+        </div>
+        <button
+          type="submit"
+          class="w-11 h-11 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform disabled:opacity-50"
+          id="sendBtn"
+        >
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </form>
+    </footer>
+
+    <script>
+      const n8nWebhookUrl =
+        "https://janone.app.n8n.cloud/webhook/c916fc6b-f49a-43ba-8d38-37e3fb5461b1/chat";
+      const chatDisplay = document.getElementById("chatDisplay");
+      const chatForm = document.getElementById("chatForm");
+      const userInput = document.getElementById("userInput");
+      const loading = document.getElementById("loading");
+      const sendBtn = document.getElementById("sendBtn");
+      const clearChat = document.getElementById("clearChat");
+
+      function scrollToBottom() {
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+      }
+
+      // Định dạng tiền tệ VN
+      function formatVNMoney(amount) {
+        const num = parseFloat(amount);
+        if (isNaN(num)) return amount;
+        return new Intl.NumberFormat("vi-VN").format(num) + "đ";
+      }
+
+      // Hàm bóc tách dữ liệu n8n cực kỳ mạnh mẽ
+      function extractData(raw) {
+        if (!raw) return null;
+
+        // 1. Thử parse nếu là chuỗi JSON
+        let data = raw;
+        if (typeof raw === "string") {
+          try {
+            data = JSON.parse(raw);
+          } catch (e) {
+            return null;
+          }
+        }
+
+        // 2. Nếu là mảng từ n8n (dạng [{json:{...}}, ...])
+        if (Array.isArray(data)) {
+          // Kiểm tra xem có phải định dạng n8n item không
+          if (data.length > 0 && (data[0].json || data[0].data)) {
+            const items = data.map((item) => item.json || item.data);
+            // Sau khi bóc n8n, kiểm tra xem có item nào chứa rows không
+            for (const it of items) {
+              if (it && it.rows && Array.isArray(it.rows)) return it.rows;
+            }
+            return items;
+          }
+          return data;
+        }
+
+        // 3. Nếu là object đơn lẻ
+        if (typeof data === "object") {
+          // Ưu tiên tìm kiếm trường 'rows' như bạn yêu cầu
+          if (data.rows && Array.isArray(data.rows)) return data.rows;
+
+          // Kiểm tra các trường danh sách phổ biến khác
+          const listKeys = ["data", "items", "output", "results"];
+          for (const key of listKeys) {
+            if (data[key] && Array.isArray(data[key])) return data[key];
+          }
+
+          // Nếu là object lồng n8n json
+          if (data.json) return extractData(data.json);
+
+          // Cuối cùng coi là 1 dòng dữ liệu đơn lẻ
+          return [data];
+        }
+
+        return null;
+      }
+
+      // Hàm tạo bảng từ mảng dữ liệu
+      function generateTableHtml(inputData) {
+        const items = extractData(inputData);
+
+        if (
+          !items ||
+          !Array.isArray(items) ||
+          items.length === 0 ||
+          typeof items[0] !== "object"
+        ) {
+          return null;
+        }
+
+        // Lấy tất cả các keys duy nhất từ TẤT CẢ các hàng
+        const allKeys = [
+          ...new Set(items.flatMap((item) => Object.keys(item))),
+        ];
+
+        let totalAmount = 0;
+        let hasAmountField = false;
+        let amountKey = allKeys.find((k) => k.toLowerCase().includes("tiền"));
+
+        let html = `<div class="ai-table-container"><table class="ai-table"><thead><tr>`;
+        allKeys.forEach((k) => (html += `<th>${k}</th>`));
+        html += `</tr></thead><tbody>`;
+
+        items.forEach((item) => {
+          html += `<tr>`;
+          allKeys.forEach((key) => {
+            let val = item[key] !== undefined ? item[key] : "-";
+
+            if (key === amountKey) {
+              hasAmountField = true;
+              const numVal = parseFloat(val);
+              if (!isNaN(numVal)) {
+                totalAmount += numVal;
+                val = formatVNMoney(numVal);
+              }
+            }
+            html += `<td>${val}</td>`;
+          });
+          html += `</tr>`;
+        });
+
+        // Hàng tổng cộng nếu có từ 2 sản phẩm trở lên
+        if (items.length > 1 && hasAmountField) {
+          html += `<tr class="total-row">`;
+          allKeys.forEach((key, index) => {
+            if (index === 0) {
+              html += `<td>TỔNG CỘNG</td>`;
+            } else if (key === amountKey) {
+              html += `<td>${formatVNMoney(totalAmount)}</td>`;
+            } else {
+              html += `<td></td>`;
+            }
+          });
+          html += `</tr>`;
+        }
+
+        html += `</tbody></table></div>`;
+        return html;
+      }
+
+      function appendMessage(role, content, isHtml = false) {
+        const wrapper = document.createElement("div");
+        wrapper.className = `flex items-start gap-2 ${
+          role === "user" ? "flex-row-reverse" : ""
+        }`;
+
+        const icon =
+          role === "user"
+            ? '<div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0"><i class="fas fa-user text-gray-600 text-xs"></i></div>'
+            : '<div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0"><i class="fas fa-robot text-indigo-600 text-xs"></i></div>';
+
+        const bubbleClass =
+          role === "user"
+            ? "bg-indigo-600 text-white rounded-2xl rounded-tr-none shadow-sm"
+            : "bg-white text-gray-700 rounded-2xl rounded-tl-none ios-shadow";
+
+        const messageContent = isHtml
+          ? content
+          : String(content).replace(/\n/g, "<br>");
+
+        wrapper.innerHTML = `
+                ${icon}
+                <div class="message-bubble p-3 ${bubbleClass} text-sm leading-relaxed">
+                    ${messageContent}
+                </div>
+            `;
+
+        chatDisplay.appendChild(wrapper);
+        scrollToBottom();
+      }
+
+      async function fetchAIResponse(prompt, retries = 0) {
+        try {
+          const response = await fetch(n8nWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chatInput: prompt }),
+          });
+
+          if (!response.ok) throw new Error("Network error");
+          return await response.json();
+        } catch (error) {
+          if (retries < 2) {
+            await new Promise((r) => setTimeout(r, 1000));
+            return fetchAIResponse(prompt, retries + 1);
+          }
+          return { output: "Lỗi kết nối máy chủ n8n." };
+        }
+      }
+
+      chatForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        appendMessage("user", message);
+        userInput.value = "";
+
+        userInput.disabled = true;
+        sendBtn.disabled = true;
+        loading.classList.remove("hidden");
+        chatDisplay.appendChild(loading);
+        scrollToBottom();
+
+        const n8nResponse = await fetchAIResponse(message);
+
+        loading.classList.add("hidden");
+        userInput.disabled = false;
+        sendBtn.disabled = false;
+
+        const tableHtml = generateTableHtml(n8nResponse);
+        if (tableHtml) {
+          appendMessage("ai", `Đã ghi nhận dữ liệu mới: ${tableHtml}`, true);
+        } else {
+          // Hiển thị text nếu không tìm thấy cấu trúc bảng
+          const textOutput =
+            n8nResponse.output ||
+            n8nResponse.text ||
+            (typeof n8nResponse === "string"
+              ? n8nResponse
+              : JSON.stringify(n8nResponse));
+          appendMessage("ai", textOutput);
+        }
+
+        userInput.focus();
+      });
+
+      clearChat.addEventListener("click", () => {
+        chatDisplay.innerHTML = "";
+        appendMessage("ai", "Lịch sử đã được dọn dẹp.");
+      });
+
+      userInput.addEventListener("focus", () => {
+        setTimeout(scrollToBottom, 300);
+      });
+    </script>
+  </body>
+</html>
