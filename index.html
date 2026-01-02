@@ -119,15 +119,15 @@
         flex-shrink: 0;
       }
 
-      /* LAYER INPUT OVERLAY - Đã sửa để đi theo bàn phím */
+      /* LAYER INPUT OVERLAY */
       .input-overlay-layer {
         position: absolute;
-        /* Sử dụng biến offset để đẩy lên khi có bàn phím */
         bottom: var(--keyboard-offset, 0px);
         left: 0;
         right: 0;
-        padding: 1.25rem;
-        padding-bottom: calc(1.25rem + var(--sab));
+        padding: 0.75rem 1rem;
+        /* Khi bàn phím mở, bỏ qua vùng an toàn dưới cùng để sát phím */
+        padding-bottom: calc(0.75rem + var(--sab));
         background: linear-gradient(
           to top,
           #f8fafc 60%,
@@ -135,7 +135,12 @@
         );
         z-index: 50;
         pointer-events: none;
-        transition: bottom 0.1s ease-out;
+        transition: bottom 0.05s ease-out, padding 0.1s ease;
+      }
+
+      /* Class đặc biệt khi bàn phím mở */
+      body.keyboard-is-open .input-overlay-layer {
+        padding-bottom: 0.75rem; /* Thu nhỏ padding khi có bàn phím */
       }
 
       .input-wrapper {
@@ -192,7 +197,7 @@
       }
     </style>
   </head>
-  <body>
+  <body class="keyboard-closed">
     <div class="app-container">
       <!-- Header -->
       <header class="flex items-center justify-between px-5">
@@ -228,8 +233,8 @@
           <div
             class="message-bubble bg-white p-3.5 rounded-2xl rounded-tl-none text-gray-700 border border-gray-100"
           >
-            Xin chào! Tôi đã cập nhật để thanh nhập liệu luôn "bám sát" bàn phím
-            trên điện thoại của bạn.
+            Chào bạn! Tôi đã tinh chỉnh lại để thanh nhập liệu "dính" sát vào
+            mép bàn phím Xiaomi của bạn hơn.
           </div>
         </div>
       </main>
@@ -285,34 +290,33 @@
         });
       }
 
-      // TỐI ƯU CHO XIAOMI: Theo dõi Visual Viewport để đẩy thanh input lên
+      // TỐI ƯU CHO XIAOMI: Xử lý khoảng cách bàn phím
       if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", () => {
+        const handleViewportChange = () => {
           const offset = window.innerHeight - window.visualViewport.height;
-          // Nếu offset > 0 nghĩa là bàn phím đang hiện
+
+          // Cập nhật biến CSS
           document.documentElement.style.setProperty(
             "--keyboard-offset",
             offset + "px"
           );
 
-          // Đẩy loading indicator lên nếu cần
-          if (offset > 0) {
-            loading.style.bottom = offset + 100 + "px";
+          // Thêm class để điều chỉnh padding
+          if (offset > 50) {
+            document.body.classList.add("keyboard-is-open");
+            document.body.classList.remove("keyboard-closed");
+            loading.style.bottom = offset + 80 + "px";
           } else {
+            document.body.classList.remove("keyboard-is-open");
+            document.body.classList.add("keyboard-closed");
             loading.style.bottom = "96px";
           }
 
-          scrollToBottom();
-        });
+          setTimeout(scrollToBottom, 50);
+        };
 
-        window.visualViewport.addEventListener("scroll", () => {
-          // Giữ vị trí đúng khi cuộn màn hình
-          const offset = window.innerHeight - window.visualViewport.height;
-          document.documentElement.style.setProperty(
-            "--keyboard-offset",
-            offset + "px"
-          );
-        });
+        window.visualViewport.addEventListener("resize", handleViewportChange);
+        window.visualViewport.addEventListener("scroll", handleViewportChange);
       }
 
       function formatVNMoney(amount) {
