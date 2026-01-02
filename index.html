@@ -7,6 +7,16 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <title>AI Chat Mobile - Xiaomi Optimized</title>
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>"
+    />
+
+    <!-- Theme Color cho Android/Xiaomi Status Bar -->
+    <meta name="theme-color" content="#4f46e5" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       rel="stylesheet"
@@ -26,11 +36,11 @@
         padding: 0;
         display: flex;
         justify-content: center;
-        /* Ngăn chặn rung màn hình trên Android khi kéo */
         overscroll-behavior: none;
+        height: 100vh;
+        height: -webkit-fill-available;
       }
 
-      /* Container chính chiếm toàn bộ chiều cao linh hoạt */
       .app-container {
         display: flex;
         flex-direction: column;
@@ -43,15 +53,16 @@
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
       }
 
-      /* Vùng chat tự động giãn nở */
       #chatDisplay {
-        flex: 1;
+        flex: 0.95;
         overflow-y: auto;
         padding: 1rem;
         background-color: #f9fafb;
         display: flex;
         flex-direction: column;
         gap: 1rem;
+        /* Tăng khoảng trống dưới cùng để không bị bàn phím che tin nhắn mới nhất */
+        padding-bottom: 2rem;
       }
 
       .message-bubble {
@@ -65,7 +76,6 @@
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
       }
 
-      /* Bảng tối ưu cho màn hình nhỏ */
       .ai-table-container {
         width: 100%;
         overflow-x: auto;
@@ -98,12 +108,12 @@
         font-weight: bold;
       }
 
-      /* Footer nhập liệu */
       footer {
         padding: 0.75rem;
         background: white;
         border-top: 1px solid #f3f4f6;
         padding-bottom: calc(0.75rem + var(--sab));
+        z-index: 30;
       }
 
       .typing-indicator span {
@@ -134,7 +144,7 @@
     </style>
   </head>
   <body>
-    <div class="app-container">
+    <div class="app-container" id="mainContainer">
       <!-- Header -->
       <header
         class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 shrink-0 shadow-sm z-10"
@@ -162,7 +172,6 @@
 
       <!-- Chat Display -->
       <main id="chatDisplay">
-        <!-- Câu chào luôn ở trên cùng -->
         <div class="flex items-start gap-2">
           <div
             class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0"
@@ -172,8 +181,8 @@
           <div
             class="message-bubble bg-white p-3 rounded-2xl rounded-tl-none ios-shadow text-gray-700"
           >
-            Chào bạn! Tôi là trợ lý quản lý chi tiêu. Gửi cho tôi thông tin chi
-            tiêu để tôi lập bảng nhé.
+            Chào bạn! Tôi là trợ lý quản lý chi tiêu. Hãy nhập nội dung, tôi sẽ
+            giữ bàn phím mở cho bạn.
           </div>
         </div>
       </main>
@@ -203,6 +212,7 @@
             placeholder="Ví dụ: Ăn sáng 30k"
             class="flex-1 px-4 py-3 bg-gray-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all"
             autocomplete="off"
+            inputmode="text"
           />
           <button
             type="submit"
@@ -218,6 +228,7 @@
     <script>
       const n8nWebhookUrl =
         "https://janone.app.n8n.cloud/webhook/c916fc6b-f49a-43ba-8d38-37e3fb5461b1/chat";
+      const mainContainer = document.getElementById("mainContainer");
       const chatDisplay = document.getElementById("chatDisplay");
       const chatForm = document.getElementById("chatForm");
       const userInput = document.getElementById("userInput");
@@ -236,7 +247,6 @@
           : new Intl.NumberFormat("vi-VN").format(num) + "đ";
       }
 
-      // Xử lý dữ liệu n8n trả về theo cấu trúc { rows: [...] }
       function extractData(raw) {
         if (!raw) return null;
         let data = raw;
@@ -247,15 +257,11 @@
             return null;
           }
         }
-
-        // Trường hợp mảng bọc n8n
         if (Array.isArray(data)) {
           if (data.length > 0 && (data[0].json || data[0].data)) {
             data = data.map((item) => item.json || item.data);
           }
         }
-
-        // Tìm mảng 'rows' trong object
         if (typeof data === "object" && data !== null) {
           if (data.rows && Array.isArray(data.rows)) return data.rows;
           if (Array.isArray(data)) return data;
@@ -268,17 +274,14 @@
       function generateTableHtml(inputData) {
         const items = extractData(inputData);
         if (!items || !Array.isArray(items) || items.length === 0) return null;
-
         const allKeys = [
           ...new Set(items.flatMap((item) => Object.keys(item))),
         ];
         let total = 0;
         let amountKey = allKeys.find((k) => k.toLowerCase().includes("tiền"));
-
         let html = `<div class="ai-table-container"><table class="ai-table"><thead><tr>`;
         allKeys.forEach((k) => (html += `<th>${k}</th>`));
         html += `</tr></thead><tbody>`;
-
         items.forEach((item) => {
           html += `<tr>`;
           allKeys.forEach((key) => {
@@ -292,7 +295,6 @@
           });
           html += `</tr>`;
         });
-
         if (items.length > 1 && amountKey) {
           html += `<tr class="total-row">`;
           allKeys.forEach((key, i) => {
@@ -302,7 +304,6 @@
           });
           html += `</tr>`;
         }
-
         html += `</tbody></table></div>`;
         return html;
       }
@@ -312,27 +313,27 @@
         wrapper.className = `flex items-start gap-2 ${
           role === "user" ? "flex-row-reverse" : ""
         }`;
-
         const icon =
           role === "user"
             ? '<div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0"><i class="fas fa-user text-gray-500 text-[10px]"></i></div>'
             : '<div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0"><i class="fas fa-robot text-indigo-600 text-[10px]"></i></div>';
-
         const bubbleClass =
           role === "user"
             ? "bg-indigo-600 text-white rounded-2xl rounded-tr-none shadow-sm"
             : "bg-white text-gray-700 rounded-2xl rounded-tl-none ios-shadow";
-
         wrapper.innerHTML = `
                 ${icon}
                 <div class="message-bubble p-3 ${bubbleClass}">
                     ${isHtml ? content : String(content).replace(/\n/g, "<br>")}
                 </div>
             `;
-
         chatDisplay.appendChild(wrapper);
-        // Một chút delay cho Android mượt hơn
         setTimeout(scrollToBottom, 50);
+      }
+
+      // Hàm tập trung vào ô nhập liệu
+      function focusInput() {
+        userInput.focus();
       }
 
       chatForm.addEventListener("submit", async (e) => {
@@ -343,10 +344,14 @@
         appendMessage("user", msg);
         userInput.value = "";
 
-        userInput.disabled = true;
+        // Không disable input để tránh mất focus và ẩn bàn phím
+        // Chỉ vô hiệu hóa nút gửi
         sendBtn.disabled = true;
         loading.classList.remove("hidden");
         scrollToBottom();
+
+        // Giữ focus ngay lập tức sau khi nhấn gửi
+        focusInput();
 
         try {
           const response = await fetch(n8nWebhookUrl, {
@@ -357,7 +362,6 @@
           const resData = await response.json();
 
           loading.classList.add("hidden");
-          userInput.disabled = false;
           sendBtn.disabled = false;
 
           const table = generateTableHtml(resData);
@@ -370,28 +374,41 @@
           }
         } catch (err) {
           loading.classList.add("hidden");
-          userInput.disabled = false;
           sendBtn.disabled = false;
           appendMessage("ai", "Lỗi kết nối. Vui lòng thử lại.");
         }
-        userInput.focus();
+
+        // Đảm bảo focus lại sau khi AI trả lời
+        focusInput();
       });
 
-      // Tối ưu Xiaomi: Đảm bảo input không bị bàn phím che
+      // Tối ưu Xiaomi: Chạm vào bất kỳ đâu trong vùng chat cũng sẽ tập trung vào ô nhập liệu
+      chatDisplay.addEventListener("click", () => {
+        focusInput();
+      });
+
       userInput.addEventListener("focus", () => {
         setTimeout(() => {
-          userInput.scrollIntoView({ behavior: "smooth", block: "center" });
           scrollToBottom();
         }, 300);
       });
 
-      clearChat.addEventListener("click", () => {
+      clearChat.addEventListener("click", (e) => {
+        e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài gây focus lại
         chatDisplay.innerHTML = "";
         appendMessage("ai", "Đã dọn dẹp lịch sử.");
+        focusInput();
       });
 
-      // Lắng nghe thay đổi kích thước màn hình khi bàn phím hiện lên
-      window.addEventListener("resize", scrollToBottom);
+      // Theo dõi resize màn hình (khi bàn phím hiện/ẩn)
+      window.addEventListener("resize", () => {
+        if (document.activeElement === userInput) {
+          scrollToBottom();
+        }
+      });
+
+      // Lần đầu tải trang tự động focus
+      window.onload = focusInput;
     </script>
   </body>
 </html>
