@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
-    <title>AI Chat Mobile - Smart Overlay UI</title>
+    <title>AI Chat Mobile - Virtual Keyboard</title>
 
     <!-- Favicon -->
     <link
@@ -14,8 +14,7 @@
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>"
     />
 
-    <!-- Theme Color -->
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#f8fafc" />
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link
@@ -25,21 +24,15 @@
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
-      :root {
-        --sab: env(safe-area-inset-bottom);
-        --keyboard-offset: 0px;
-      }
-
       body {
         font-family: "Inter", sans-serif;
-        background-color: #000;
+        background-color: #f1f5f9;
         margin: 0;
         padding: 0;
         display: flex;
         justify-content: center;
-        overscroll-behavior: none;
-        height: 100vh;
         overflow: hidden;
+        height: 100vh;
       }
 
       .app-container {
@@ -48,10 +41,8 @@
         width: 100%;
         max-width: 500px;
         height: 100vh;
-        height: 100dvh;
         background-color: #f8fafc;
         position: relative;
-        overflow: hidden;
       }
 
       /* Khung chat */
@@ -62,112 +53,121 @@
         display: flex;
         flex-direction: column;
         gap: 1rem;
-        /* Khoảng trống dưới để tránh bị layer input che */
-        padding-bottom: 120px;
+        background-color: #f8fafc;
         scroll-behavior: smooth;
       }
 
       .message-bubble {
         max-width: 85%;
         word-wrap: break-word;
-        font-size: 0.935rem;
+        font-size: 0.9rem;
         line-height: 1.5;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       }
 
-      /* Bảng dữ liệu tối ưu */
+      /* Bảng dữ liệu */
       .ai-table-container {
         width: 100%;
         overflow-x: auto;
         margin-top: 0.5rem;
         border-radius: 12px;
-        border: 1px solid #edf2f7;
+        border: 1px solid #e2e8f0;
         background: white;
       }
       .ai-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
       }
       .ai-table th {
-        background-color: #f7fafc;
-        color: #718096;
-        padding: 10px;
+        background-color: #f1f5f9;
+        color: #64748b;
+        padding: 8px;
         text-align: left;
-        border-bottom: 1px solid #edf2f7;
+        border-bottom: 1px solid #e2e8f0;
       }
       .ai-table td {
-        padding: 10px;
-        border-bottom: 1px solid #f7fafc;
-        color: #2d3748;
-      }
-      .ai-table .total-row {
-        background-color: #fffaf0;
-        font-weight: bold;
-        color: #dd6b20;
+        padding: 8px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
       }
 
-      /* HEADER FIXED */
-      header {
-        height: 60px;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-bottom: 1px solid #e2e8f0;
-        z-index: 20;
-        width: 100%;
-        flex-shrink: 0;
-      }
-
-      /* LAYER INPUT OVERLAY */
-      .input-overlay-layer {
-        position: absolute;
-        bottom: var(--keyboard-offset, 0px);
-        left: 0;
-        right: 0;
+      /* Input Area Display */
+      .input-display-area {
+        background: white;
         padding: 0.75rem 1rem;
-        /* Khi bàn phím mở, bỏ qua vùng an toàn dưới cùng để sát phím */
-        padding-bottom: calc(0.75rem + var(--sab));
-        background: linear-gradient(
-          to top,
-          #f8fafc 60%,
-          rgba(248, 250, 252, 0) 100%
-        );
-        z-index: 50;
-        pointer-events: none;
-        transition: bottom 0.05s ease-out, padding 0.1s ease;
-      }
-
-      /* Class đặc biệt khi bàn phím mở */
-      body.keyboard-is-open .input-overlay-layer {
-        padding-bottom: 0.75rem; /* Thu nhỏ padding khi có bàn phím */
-      }
-
-      .input-wrapper {
-        pointer-events: auto;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 30px;
-        padding: 6px 6px 6px 18px;
+        border-top: 1px solid #e2e8f0;
         display: flex;
         align-items: center;
-        gap: 8px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        gap: 10px;
       }
-
-      .input-wrapper:focus-within {
-        border-color: #4f46e5;
-        box-shadow: 0 15px 35px -5px rgba(79, 70, 229, 0.2);
-      }
-
-      #userInput {
+      #virtualInput {
         flex: 1;
-        background: transparent;
-        border: none;
-        outline: none;
+        padding: 10px 15px;
+        background: #f1f5f9;
+        border-radius: 20px;
         font-size: 0.95rem;
-        color: #1a202c;
-        height: 40px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        color: #1e293b;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      #virtualInput:empty::before {
+        content: attr(data-placeholder);
+        color: #94a3b8;
+      }
+
+      /* BÀN PHÍM ẢO */
+      .v-keyboard {
+        background: #d1d5db; /* Màu nền bàn phím iOS/Android */
+        padding: 8px 4px 30px 4px; /* Padding dưới để tránh cằm máy Xiaomi */
+        display: grid;
+        grid-template-rows: repeat(4, 1fr);
+        gap: 6px;
+        user-select: none;
+      }
+      .kb-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        width: 100%;
+      }
+      .kb-key {
+        background: #ffffff;
+        color: #000;
+        border-radius: 6px;
+        height: 46px;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        font-weight: 500;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        transition: background 0.1s;
+        max-width: 40px;
+      }
+      .kb-key:active {
+        background: #adb5bd;
+      }
+      .kb-key.wide {
+        max-width: none;
+        flex: 1.5;
+        background: #adb5bd;
+        font-size: 0.9rem;
+      }
+      .kb-key.space {
+        max-width: none;
+        flex: 5;
+      }
+      .kb-key.send {
+        max-width: none;
+        flex: 1.5;
+        background: #4f46e5;
+        color: white;
       }
 
       .typing-indicator span {
@@ -178,13 +178,6 @@
         border-radius: 50%;
         animation: bounce 1.4s infinite ease-in-out both;
       }
-      .typing-indicator span:nth-child(2) {
-        animation-delay: 0.2s;
-      }
-      .typing-indicator span:nth-child(3) {
-        animation-delay: 0.4s;
-      }
-
       @keyframes bounce {
         0%,
         80%,
@@ -197,32 +190,34 @@
       }
     </style>
   </head>
-  <body class="keyboard-closed">
+  <body>
     <div class="app-container">
       <!-- Header -->
-      <header class="flex items-center justify-between px-5">
+      <header
+        class="flex items-center justify-between px-5 py-3 bg-white border-b border-gray-100 shrink-0 shadow-sm z-10"
+      >
         <div class="flex items-center gap-3">
           <div
-            class="w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg"
+            class="w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center text-white"
           >
-            <i class="fas fa-robot text-sm"></i>
+            <i class="fas fa-wallet text-sm"></i>
           </div>
           <div>
-            <h1 class="text-sm font-bold text-gray-800">Trợ Lý Xiaomi</h1>
+            <h1 class="text-sm font-bold text-gray-800">Sổ Chi Tiêu AI</h1>
             <div class="flex items-center gap-1">
               <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
               <span class="text-[10px] text-gray-400 font-medium"
-                >Smart Layer Active</span
+                >Bàn phím ảo</span
               >
             </div>
           </div>
         </div>
         <button id="clearChat" class="text-gray-300 p-2 hover:text-red-500">
-          <i class="fas fa-trash-alt text-sm"></i>
+          <i class="fas fa-history text-sm"></i>
         </button>
       </header>
 
-      <!-- Chat Display -->
+      <!-- Chat Space -->
       <main id="chatDisplay">
         <div class="flex items-start gap-2">
           <div
@@ -231,43 +226,82 @@
             <i class="fas fa-robot text-indigo-500 text-xs"></i>
           </div>
           <div
-            class="message-bubble bg-white p-3.5 rounded-2xl rounded-tl-none text-gray-700 border border-gray-100"
+            class="message-bubble bg-white p-3 rounded-2xl rounded-tl-none border border-gray-100 text-gray-700"
           >
-            Chào bạn! Tôi đã tinh chỉnh lại để thanh nhập liệu "dính" sát vào
-            mép bàn phím Xiaomi của bạn hơn.
+            Chào bạn! Tôi đã tích hợp bàn phím ảo riêng để bạn sử dụng mượt mà
+            nhất trên Xiaomi.
           </div>
         </div>
       </main>
 
       <!-- Loading -->
-      <div id="loading" class="hidden absolute bottom-32 left-6 z-40">
-        <div
-          class="typing-indicator bg-white/90 backdrop-blur px-4 py-2 rounded-full border border-indigo-100 shadow-sm flex gap-1.5 items-center"
-        >
-          <span></span><span></span><span></span>
-          <span class="text-[10px] ml-1 font-bold text-indigo-500 uppercase"
-            >AI đang xử lý</span
+      <div id="loading" class="hidden px-5 py-2">
+        <div class="flex items-center gap-2 opacity-60">
+          <div class="typing-indicator flex gap-1 items-center">
+            <span></span><span></span><span></span>
+          </div>
+          <span
+            class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest"
+            >Đang xử lý</span
           >
         </div>
       </div>
 
-      <!-- LAYER INPUT OVERLAY (Sẽ di chuyển theo bàn phím) -->
-      <div class="input-overlay-layer" id="inputLayer">
-        <div class="input-wrapper">
-          <input
-            type="text"
-            id="userInput"
-            placeholder="Nhập chi tiêu tại đây..."
-            class="flex-1"
-            autocomplete="off"
-            inputmode="text"
-          />
-          <button
-            id="sendBtn"
-            class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform disabled:opacity-50"
-          >
-            <i class="fas fa-paper-plane text-xs"></i>
-          </button>
+      <!-- Input Display -->
+      <div class="input-display-area">
+        <div id="virtualInput" data-placeholder="Nhập chi tiêu..."></div>
+      </div>
+
+      <!-- BÀN PHÍM ẢO -->
+      <div class="v-keyboard" id="keyboard">
+        <!-- Row 1 -->
+        <div class="kb-row">
+          <div class="kb-key">q</div>
+          <div class="kb-key">w</div>
+          <div class="kb-key">e</div>
+          <div class="kb-key">r</div>
+          <div class="kb-key">t</div>
+          <div class="kb-key">y</div>
+          <div class="kb-key">u</div>
+          <div class="kb-key">i</div>
+          <div class="kb-key">o</div>
+          <div class="kb-key">p</div>
+        </div>
+        <!-- Row 2 -->
+        <div class="kb-row">
+          <div class="kb-key">a</div>
+          <div class="kb-key">s</div>
+          <div class="kb-key">d</div>
+          <div class="kb-key">f</div>
+          <div class="kb-key">g</div>
+          <div class="kb-key">h</div>
+          <div class="kb-key">j</div>
+          <div class="kb-key">k</div>
+          <div class="kb-key">l</div>
+        </div>
+        <!-- Row 3 -->
+        <div class="kb-row">
+          <div class="kb-key wide" id="keyShift">
+            <i class="fas fa-arrow-up"></i>
+          </div>
+          <div class="kb-key">z</div>
+          <div class="kb-key">x</div>
+          <div class="kb-key">c</div>
+          <div class="kb-key">v</div>
+          <div class="kb-key">b</div>
+          <div class="kb-key">n</div>
+          <div class="kb-key">m</div>
+          <div class="kb-key wide" id="keyBackspace">
+            <i class="fas fa-backspace"></i>
+          </div>
+        </div>
+        <!-- Row 4 -->
+        <div class="kb-row">
+          <div class="kb-key wide" id="keyToggleMode">123</div>
+          <div class="kb-key space" id="keySpace">Dấu cách</div>
+          <div class="kb-key send" id="keySend">
+            <i class="fas fa-paper-plane"></i>
+          </div>
         </div>
       </div>
     </div>
@@ -276,75 +310,156 @@
       const n8nWebhookUrl =
         "https://janone.app.n8n.cloud/webhook/c916fc6b-f49a-43ba-8d38-37e3fb5461b1/chat";
       const chatDisplay = document.getElementById("chatDisplay");
-      const userInput = document.getElementById("userInput");
+      const virtualInput = document.getElementById("virtualInput");
+      const keyboard = document.getElementById("keyboard");
       const loading = document.getElementById("loading");
-      const sendBtn = document.getElementById("sendBtn");
       const clearChat = document.getElementById("clearChat");
-      const inputLayer = document.getElementById("inputLayer");
 
-      // Hàm cuộn xuống cuối
-      function scrollToBottom() {
-        chatDisplay.scrollTo({
-          top: chatDisplay.scrollHeight,
-          behavior: "smooth",
+      let isShift = false;
+      let isNumeric = false;
+      let currentText = "";
+
+      const layouts = {
+        alpha: ["qwert yuiop", "asdfghjkl", "zxcvbnm"],
+        numeric: ["1234567890", "-/:;()$&@", ".,?!'\""],
+      };
+
+      function updateKeyboard() {
+        const rows = keyboard.querySelectorAll(".kb-row");
+        const layout = isNumeric ? layouts.numeric : layouts.alpha;
+
+        layout.forEach((chars, rowIndex) => {
+          const keys = rows[rowIndex].querySelectorAll(".kb-key:not(.wide)");
+          chars.split("").forEach((char, charIndex) => {
+            if (keys[charIndex]) {
+              keys[charIndex].textContent = isShift ? char.toUpperCase() : char;
+              keys[charIndex].dataset.char = isShift
+                ? char.toUpperCase()
+                : char;
+            }
+          });
         });
+        document
+          .getElementById("keyShift")
+          .classList.toggle("bg-blue-400", isShift);
       }
 
-      // TỐI ƯU CHO XIAOMI: Xử lý khoảng cách bàn phím
-      if (window.visualViewport) {
-        const handleViewportChange = () => {
-          const offset = window.innerHeight - window.visualViewport.height;
+      function scrollToBottom() {
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+      }
 
-          // Cập nhật biến CSS
-          document.documentElement.style.setProperty(
-            "--keyboard-offset",
-            offset + "px"
-          );
+      // Xử lý sự kiện bàn phím
+      keyboard.addEventListener("click", (e) => {
+        const target = e.target.closest(".kb-key");
+        if (!target) return;
 
-          // Thêm class để điều chỉnh padding
-          if (offset > 50) {
-            document.body.classList.add("keyboard-is-open");
-            document.body.classList.remove("keyboard-closed");
-            loading.style.bottom = offset + 80 + "px";
-          } else {
-            document.body.classList.remove("keyboard-is-open");
-            document.body.classList.add("keyboard-closed");
-            loading.style.bottom = "96px";
+        const id = target.id;
+        const char = target.dataset.char;
+
+        if (id === "keyBackspace") {
+          currentText = currentText.slice(0, -1);
+        } else if (id === "keySpace") {
+          currentText += " ";
+        } else if (id === "keyShift") {
+          isShift = !isShift;
+          updateKeyboard();
+          return;
+        } else if (id === "keyToggleMode") {
+          isNumeric = !isNumeric;
+          target.textContent = isNumeric ? "ABC" : "123";
+          updateKeyboard();
+          return;
+        } else if (id === "keySend") {
+          handleSendMessage();
+          return;
+        } else if (char) {
+          currentText += char;
+          if (isShift) {
+            isShift = false;
+            updateKeyboard();
           }
+        }
 
-          setTimeout(scrollToBottom, 50);
-        };
+        virtualInput.textContent = currentText;
+        virtualInput.scrollLeft = virtualInput.scrollWidth;
+      });
 
-        window.visualViewport.addEventListener("resize", handleViewportChange);
-        window.visualViewport.addEventListener("scroll", handleViewportChange);
+      async function handleSendMessage() {
+        if (!currentText.trim()) return;
+
+        const message = currentText;
+        appendMessage("user", message);
+        currentText = "";
+        virtualInput.textContent = "";
+
+        loading.classList.remove("hidden");
+        scrollToBottom();
+
+        try {
+          const response = await fetch(n8nWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chatInput: message }),
+          });
+          const resData = await response.json();
+
+          loading.classList.add("hidden");
+          const table = generateTableHtml(resData);
+          if (table) {
+            appendMessage("ai", `Đã lưu chi tiêu: ${table}`, true);
+          } else {
+            const text =
+              resData.output || resData.text || JSON.stringify(resData);
+            appendMessage("ai", text);
+          }
+        } catch (err) {
+          loading.classList.add("hidden");
+          appendMessage("ai", "Lỗi kết nối máy chủ.");
+        }
       }
 
-      function formatVNMoney(amount) {
-        const num = parseFloat(amount);
-        return isNaN(num)
-          ? amount
-          : new Intl.NumberFormat("vi-VN").format(num) + "đ";
+      function appendMessage(role, content, isHtml = false) {
+        const wrapper = document.createElement("div");
+        wrapper.className = `flex items-start gap-2 ${
+          role === "user" ? "flex-row-reverse" : ""
+        }`;
+        const icon =
+          role === "user"
+            ? '<div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0"><i class="fas fa-user text-gray-400 text-[10px]"></i></div>'
+            : '<div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center flex-shrink-0"><i class="fas fa-robot text-white text-[10px]"></i></div>';
+        const bubbleClass =
+          role === "user"
+            ? "bg-indigo-600 text-white rounded-2xl rounded-tr-none"
+            : "bg-white text-gray-700 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm";
+
+        wrapper.innerHTML = `
+                ${icon}
+                <div class="message-bubble p-3 ${bubbleClass}">
+                    ${isHtml ? content : String(content).replace(/\n/g, "<br>")}
+                </div>
+            `;
+        chatDisplay.appendChild(wrapper);
+        scrollToBottom();
       }
 
       function extractData(raw) {
         if (!raw) return null;
         let data = raw;
-        if (typeof raw === "string") {
+        if (typeof raw === "string")
           try {
             data = JSON.parse(raw);
           } catch (e) {
             return null;
           }
-        }
-        if (Array.isArray(data)) {
-          if (data.length > 0 && (data[0].json || data[0].data)) {
-            data = data.map((item) => item.json || item.data);
-          }
-        }
+        if (
+          Array.isArray(data) &&
+          data.length > 0 &&
+          (data[0].json || data[0].data)
+        )
+          data = data.map((item) => item.json || item.data);
         if (typeof data === "object" && data !== null) {
           if (data.rows && Array.isArray(data.rows)) return data.rows;
           if (Array.isArray(data)) return data;
-          if (data.json) return extractData(data.json);
           return [data];
         }
         return null;
@@ -352,14 +467,7 @@
 
       function generateTableHtml(inputData) {
         const items = extractData(inputData);
-        if (
-          !items ||
-          !Array.isArray(items) ||
-          items.length === 0 ||
-          typeof items[0] !== "object"
-        ) {
-          return null;
-        }
+        if (!items || !Array.isArray(items) || items.length === 0) return null;
         const allKeys = [
           ...new Set(items.flatMap((item) => Object.keys(item))),
         ];
@@ -376,98 +484,30 @@
             if (key === amountKey) {
               const num = parseFloat(val);
               if (!isNaN(num)) total += num;
-              val = formatVNMoney(val);
+              val = new Intl.NumberFormat("vi-VN").format(num) + "đ";
             }
             html += `<td>${val}</td>`;
           });
           html += `</tr>`;
         });
         if (items.length > 1 && amountKey) {
-          html += `<tr class="total-row">`;
-          allKeys.forEach((key, i) => {
-            html += `<td>${
-              i === 0 ? "TỔNG" : key === amountKey ? formatVNMoney(total) : ""
-            }</td>`;
-          });
-          html += `</tr>`;
+          html += `<tr><td colspan="${
+            allKeys.length
+          }" class="p-2 text-right font-bold text-indigo-600 bg-indigo-50">Tổng: ${new Intl.NumberFormat(
+            "vi-VN"
+          ).format(total)}đ</td></tr>`;
         }
         html += `</tbody></table></div>`;
         return html;
       }
 
-      function appendMessage(role, content, isHtml = false) {
-        const wrapper = document.createElement("div");
-        wrapper.className = `flex items-start gap-2 ${
-          role === "user" ? "flex-row-reverse" : ""
-        }`;
-        const icon =
-          role === "user"
-            ? '<div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0"><i class="fas fa-user text-gray-400 text-[10px]"></i></div>'
-            : '<div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center flex-shrink-0 shadow-sm"><i class="fas fa-robot text-white text-[10px]"></i></div>';
-        const bubbleClass =
-          role === "user"
-            ? "bg-indigo-600 text-white rounded-2xl rounded-tr-none shadow-md"
-            : "bg-white text-gray-700 rounded-2xl rounded-tl-none border border-gray-100";
-        wrapper.innerHTML = `
-                ${icon}
-                <div class="message-bubble p-3.5 ${bubbleClass}">
-                    ${isHtml ? content : String(content).replace(/\n/g, "<br>")}
-                </div>
-            `;
-        chatDisplay.appendChild(wrapper);
-        setTimeout(scrollToBottom, 50);
-      }
-
-      async function handleSend() {
-        const msg = userInput.value.trim();
-        if (!msg) return;
-
-        appendMessage("user", msg);
-        userInput.value = "";
-        sendBtn.disabled = true;
-        loading.classList.remove("hidden");
-        scrollToBottom();
-        userInput.focus();
-
-        try {
-          const response = await fetch(n8nWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chatInput: msg }),
-          });
-          const resData = await response.json();
-          loading.classList.add("hidden");
-          sendBtn.disabled = false;
-          const table = generateTableHtml(resData);
-          if (table) {
-            appendMessage("ai", `Kết quả xử lý: ${table}`, true);
-          } else {
-            const text =
-              resData.output || resData.text || JSON.stringify(resData);
-            appendMessage("ai", text);
-          }
-        } catch (err) {
-          loading.classList.add("hidden");
-          sendBtn.disabled = false;
-          appendMessage("ai", "Lỗi kết nối máy chủ n8n.");
-        }
-        userInput.focus();
-      }
-
-      sendBtn.addEventListener("click", handleSend);
-      userInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") handleSend();
-      });
-
-      chatDisplay.addEventListener("click", () => userInput.focus());
-      window.onload = () => userInput.focus();
-
-      clearChat.addEventListener("click", (e) => {
-        e.stopPropagation();
+      clearChat.addEventListener("click", () => {
         chatDisplay.innerHTML = "";
-        appendMessage("ai", "Đã làm mới cuộc hội thoại.");
-        userInput.focus();
+        appendMessage("ai", "Lịch sử đã được xóa.");
       });
+
+      // Khởi tạo bàn phím
+      updateKeyboard();
     </script>
   </body>
 </html>
