@@ -2,11 +2,12 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
+    <!-- interactive-widget=resizes-visual giúp bàn phím không đẩy layout lên trên Chrome/Android -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual"
     />
-    <title>AI Chat Mobile - Overlay UI</title>
+    <title>AI Chat Mobile - True Overlay UI</title>
 
     <!-- Favicon -->
     <link
@@ -14,7 +15,7 @@
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>"
     />
 
-    <!-- Theme Color cho Status Bar -->
+    <!-- Theme Color -->
     <meta name="theme-color" content="#ffffff" />
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -31,14 +32,13 @@
 
       body {
         font-family: "Inter", sans-serif;
-        background-color: #f0f2f5;
+        background-color: #000; /* Nền tối bên ngoài cho cảm giác layer */
         margin: 0;
         padding: 0;
         display: flex;
         justify-content: center;
         overscroll-behavior: none;
         height: 100vh;
-        height: -webkit-fill-available;
       }
 
       .app-container {
@@ -47,23 +47,29 @@
         width: 100%;
         max-width: 500px;
         height: 100vh;
+        /* Cố định chiều cao tuyệt đối để không bị resize bởi bàn phím */
         height: 100dvh;
-        background-color: #f9fafb;
+        background-color: #f8fafc;
         position: relative;
         overflow: hidden;
       }
 
-      /* Vùng chat cuộn dưới layer input */
+      /* Khung chat chiếm trọn không gian nền */
       #chatDisplay {
-        flex: 1;
+        position: absolute;
+        top: 60px; /* Chiều cao header */
+        left: 0;
+        right: 0;
+        bottom: 0;
         overflow-y: auto;
         padding: 1rem;
         display: flex;
         flex-direction: column;
         gap: 1rem;
-        /* Khoảng trống cực lớn ở dưới để không bị layer input che tin nhắn */
-        padding-bottom: 100px;
+        /* Để trống một khoảng lớn ở dưới cho thanh input overlay */
+        padding-bottom: 120px;
         scroll-behavior: smooth;
+        z-index: 1;
       }
 
       .message-bubble {
@@ -71,22 +77,17 @@
         word-wrap: break-word;
         font-size: 0.935rem;
         line-height: 1.5;
-        position: relative;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
       }
 
-      .ios-shadow {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      }
-
-      /* Bảng dữ liệu */
+      /* Bảng dữ liệu tối ưu */
       .ai-table-container {
         width: 100%;
         overflow-x: auto;
         margin-top: 0.5rem;
-        border-radius: 14px;
-        border: 1px solid #eef2f6;
+        border-radius: 12px;
+        border: 1px solid #edf2f7;
         background: white;
-        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
       }
       .ai-table {
         width: 100%;
@@ -94,64 +95,85 @@
         font-size: 0.8rem;
       }
       .ai-table th {
-        background-color: #f8fafc;
-        color: #64748b;
+        background-color: #f7fafc;
+        color: #718096;
         padding: 10px;
         text-align: left;
-        font-weight: 600;
-        border-bottom: 1px solid #f1f5f9;
-        white-space: nowrap;
+        border-bottom: 1px solid #edf2f7;
       }
       .ai-table td {
         padding: 10px;
-        border-bottom: 1px solid #f8fafc;
-        color: #334155;
-        white-space: nowrap;
+        border-bottom: 1px solid #f7fafc;
+        color: #2d3748;
       }
       .ai-table .total-row {
-        background-color: #fffbeb;
-        font-weight: 700;
-        color: #92400e;
+        background-color: #fffaf0;
+        font-weight: bold;
+        color: #dd6b20;
       }
 
-      /* LAYER INPUT PHỦ TRÊN (OVERLAY) */
+      /* HEADER FIXED */
+      header {
+        height: 60px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid #e2e8f0;
+        z-index: 20;
+        width: 100%;
+      }
+
+      /* LAYER INPUT OVERLAY (FLOATING) */
       .input-overlay-layer {
         position: absolute;
         bottom: 0;
         left: 0;
         right: 0;
-        padding: 1rem;
-        padding-bottom: calc(1rem + var(--sab));
-        /* Hiệu ứng làm mờ hậu cảnh xuyên thấu */
+        padding: 1.25rem;
+        padding-bottom: calc(1.25rem + var(--sab));
+        /* Tạo hiệu ứng mờ dần phía sau thanh input */
         background: linear-gradient(
           to top,
-          rgba(249, 250, 251, 1) 70%,
-          rgba(249, 250, 251, 0) 100%
+          #f8fafc 60%,
+          rgba(248, 250, 252, 0) 100%
         );
-        z-index: 50;
-        pointer-events: none; /* Cho phép chạm xuyên qua vùng gradient phía trên */
+        z-index: 30;
+        pointer-events: none;
       }
 
       .input-wrapper {
-        pointer-events: auto; /* Kích hoạt lại chạm cho thanh input thực tế */
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        border-radius: 28px;
-        padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+        pointer-events: auto;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 30px;
+        padding: 6px 6px 6px 18px;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
-          0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        gap: 8px;
+        box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .input-wrapper:focus-within {
+        border-color: #4f46e5;
+        box-shadow: 0 15px 35px -5px rgba(79, 70, 229, 0.2);
+      }
+
+      #userInput {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        font-size: 0.95rem;
+        color: #1a202c;
+        height: 40px;
       }
 
       .typing-indicator span {
         display: inline-block;
-        width: 5px;
-        height: 5px;
-        background-color: #6366f1;
+        width: 6px;
+        height: 6px;
+        background-color: #4f46e5;
         border-radius: 50%;
         animation: bounce 1.4s infinite ease-in-out both;
       }
@@ -172,49 +194,34 @@
           transform: scale(1);
         }
       }
-
-      /* Hiệu ứng focus cho container nổi */
-      .input-wrapper:focus-within {
-        box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.2);
-        background: #ffffff;
-      }
     </style>
   </head>
   <body>
-    <div class="app-container" id="mainContainer">
-      <!-- Header mỏng gọn -->
-      <header
-        class="flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border-b border-gray-100 shrink-0 z-10 sticky top-0"
-      >
+    <div class="app-container">
+      <!-- Header -->
+      <header class="flex items-center justify-between px-5">
         <div class="flex items-center gap-3">
           <div
-            class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white rotate-3"
+            class="w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg"
           >
-            <i class="fas fa-bolt text-sm"></i>
+            <i class="fas fa-robot text-sm"></i>
           </div>
           <div>
-            <h1 class="text-sm font-bold text-gray-800 tracking-tight">
-              Chi Tiêu AI
-            </h1>
+            <h1 class="text-sm font-bold text-gray-800">Trợ Lý Xiaomi</h1>
             <div class="flex items-center gap-1">
-              <span
-                class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"
-              ></span>
+              <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
               <span class="text-[10px] text-gray-400 font-medium"
-                >Smart Layer Active</span
+                >Overlay Active</span
               >
             </div>
           </div>
         </div>
-        <button
-          id="clearChat"
-          class="text-gray-300 p-2 hover:text-red-400 transition-colors"
-        >
-          <i class="fas fa-history"></i>
+        <button id="clearChat" class="text-gray-300 p-2 hover:text-red-500">
+          <i class="fas fa-trash-alt text-sm"></i>
         </button>
       </header>
 
-      <!-- Chat Display (Nội dung sẽ trượt phía dưới input layer) -->
+      <!-- Chat Display (Background Layer) -->
       <main id="chatDisplay">
         <div class="flex items-start gap-2">
           <div
@@ -223,27 +230,23 @@
             <i class="fas fa-robot text-indigo-500 text-xs"></i>
           </div>
           <div
-            class="message-bubble bg-white p-3.5 rounded-2xl rounded-tl-none ios-shadow text-gray-700 shadow-sm border border-gray-50"
+            class="message-bubble bg-white p-3.5 rounded-2xl rounded-tl-none text-gray-700 border border-gray-100"
           >
-            Chào bạn! Giao diện Overlay Layer đã được kích hoạt. Hãy nhập thông
-            tin chi tiêu của bạn nhé.
+            Xin chào! Tôi đã tối ưu giao diện để bàn phím không làm co màn hình
+            của bạn.
           </div>
         </div>
       </main>
 
-      <!-- Loading nằm ngay trên input layer -->
-      <div id="loading" class="hidden px-6 py-2 z-40">
-        <div class="flex items-start gap-2 opacity-80">
-          <div
-            class="typing-indicator bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 flex gap-1.5 items-center"
+      <!-- Loading -->
+      <div id="loading" class="hidden absolute bottom-24 left-6 z-40">
+        <div
+          class="typing-indicator bg-white/90 backdrop-blur px-4 py-2 rounded-full border border-indigo-100 shadow-sm flex gap-1.5 items-center"
+        >
+          <span></span><span></span><span></span>
+          <span class="text-[10px] ml-1 font-bold text-indigo-500 uppercase"
+            >AI đang xử lý</span
           >
-            <span class="w-1.5 h-1.5"></span><span class="w-1.5 h-1.5"></span
-            ><span class="w-1.5 h-1.5"></span>
-            <span
-              class="text-[10px] ml-1 font-medium text-indigo-400 uppercase tracking-widest"
-              >AI đang xử lý</span
-            >
-          </div>
         </div>
       </div>
 
@@ -253,16 +256,15 @@
           <input
             type="text"
             id="userInput"
-            placeholder="Nhập chi tiêu..."
-            class="flex-1 py-2 bg-transparent border-none text-sm text-gray-800 placeholder-gray-400 outline-none"
+            placeholder="Nhập chi tiêu tại đây..."
+            class="flex-1"
             autocomplete="off"
-            inputmode="text"
           />
           <button
             id="sendBtn"
-            class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-indigo-200 shadow-lg active:scale-90 transition-transform disabled:opacity-50"
+            class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform disabled:opacity-50"
           >
-            <i class="fas fa-arrow-up text-xs"></i>
+            <i class="fas fa-paper-plane text-xs"></i>
           </button>
         </div>
       </div>
@@ -278,7 +280,10 @@
       const clearChat = document.getElementById("clearChat");
 
       function scrollToBottom() {
-        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+        chatDisplay.scrollTo({
+          top: chatDisplay.scrollHeight,
+          behavior: "smooth",
+        });
       }
 
       function formatVNMoney(amount) {
@@ -314,12 +319,20 @@
 
       function generateTableHtml(inputData) {
         const items = extractData(inputData);
-        if (!items || !Array.isArray(items) || items.length === 0) return null;
+        if (
+          !items ||
+          !Array.isArray(items) ||
+          items.length === 0 ||
+          typeof items[0] !== "object"
+        ) {
+          return null;
+        }
         const allKeys = [
           ...new Set(items.flatMap((item) => Object.keys(item))),
         ];
         let total = 0;
         let amountKey = allKeys.find((k) => k.toLowerCase().includes("tiền"));
+
         let html = `<div class="ai-table-container"><table class="ai-table"><thead><tr>`;
         allKeys.forEach((k) => (html += `<th>${k}</th>`));
         html += `</tr></thead><tbody>`;
@@ -339,7 +352,7 @@
         if (items.length > 1 && amountKey) {
           html += `<tr class="total-row">`;
           allKeys.forEach((key, i) => {
-            html += `<td class="p-3">${
+            html += `<td>${
               i === 0 ? "TỔNG" : key === amountKey ? formatVNMoney(total) : ""
             }</td>`;
           });
@@ -357,11 +370,11 @@
         const icon =
           role === "user"
             ? '<div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0"><i class="fas fa-user text-gray-400 text-[10px]"></i></div>'
-            : '<div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center flex-shrink-0 shadow-sm"><i class="fas fa-robot text-white text-[10px]"></i></div>';
+            : '<div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center flex-shrink-0 shadow-sm"><i class="fas fa-robot text-white text-[10px]"></i></div>';
         const bubbleClass =
           role === "user"
-            ? "bg-indigo-600 text-white rounded-2xl rounded-tr-none shadow-md shadow-indigo-100"
-            : "bg-white text-gray-700 rounded-2xl rounded-tl-none ios-shadow border border-gray-50";
+            ? "bg-indigo-600 text-white rounded-2xl rounded-tr-none shadow-md"
+            : "bg-white text-gray-700 rounded-2xl rounded-tl-none border border-gray-100";
         wrapper.innerHTML = `
                 ${icon}
                 <div class="message-bubble p-3.5 ${bubbleClass}">
@@ -370,10 +383,6 @@
             `;
         chatDisplay.appendChild(wrapper);
         setTimeout(scrollToBottom, 50);
-      }
-
-      function focusInput() {
-        userInput.focus();
       }
 
       async function handleSend() {
@@ -385,7 +394,7 @@
         sendBtn.disabled = true;
         loading.classList.remove("hidden");
         scrollToBottom();
-        focusInput();
+        userInput.focus();
 
         try {
           const response = await fetch(n8nWebhookUrl, {
@@ -394,10 +403,8 @@
             body: JSON.stringify({ chatInput: msg }),
           });
           const resData = await response.json();
-
           loading.classList.add("hidden");
           sendBtn.disabled = false;
-
           const table = generateTableHtml(resData);
           if (table) {
             appendMessage("ai", `Kết quả xử lý: ${table}`, true);
@@ -409,9 +416,9 @@
         } catch (err) {
           loading.classList.add("hidden");
           sendBtn.disabled = false;
-          appendMessage("ai", "Lỗi kết nối. Hãy thử lại.");
+          appendMessage("ai", "Lỗi kết nối máy chủ n8n.");
         }
-        focusInput();
+        userInput.focus();
       }
 
       sendBtn.addEventListener("click", handleSend);
@@ -419,22 +426,22 @@
         if (e.key === "Enter") handleSend();
       });
 
-      // Tối ưu Xiaomi: Click vùng chat để focus lại
-      chatDisplay.addEventListener("click", focusInput);
+      chatDisplay.addEventListener("click", () => userInput.focus());
 
-      userInput.addEventListener("focus", () => {
-        setTimeout(scrollToBottom, 300);
-      });
+      // Tự động focus khi load
+      window.onload = () => userInput.focus();
 
       clearChat.addEventListener("click", (e) => {
         e.stopPropagation();
         chatDisplay.innerHTML = "";
-        appendMessage("ai", "Lịch sử đã được làm mới.");
-        focusInput();
+        appendMessage("ai", "Đã làm mới cuộc hội thoại.");
+        userInput.focus();
       });
 
-      window.addEventListener("resize", scrollToBottom);
-      window.onload = focusInput;
+      // Xử lý sự kiện bàn phím trên Xiaomi
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", scrollToBottom);
+      }
     </script>
   </body>
 </html>
